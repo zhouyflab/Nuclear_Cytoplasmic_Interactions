@@ -1,0 +1,19 @@
+1. prepare the genotype file
+ plink --vcf nucl.id.vcf  --allow-extra-chr --const-fid --maf 0.05 --make-bed --vcf-min-gq 20 --geno 0.2 --recode vcf-iid --threads 10 --out gwasall
+2. prepare the phenotype file
+2.1 The Vs mitochondrial genome was used as a reference call SNP
+2.2 The DP value of the variation site of each sample was extracted from the vcf file
+        library(vcfR)
+        #install.packages("vcfR")        
+         vcf<-read.vcfR("D:\\nuclear-cytoplasmic interaction\\GWAS\\100mt.vcf.gz")
+         head(vcf)
+         dp <- extract.gt(vcf, element = 'DP', as.numeric = TRUE)
+         write.table(dp,"D:\\nuclear-cytoplasmic interaction\\GWAS\\100mt_dp01.csv",row.names=TRUE,col.names=TRUE,sep=",")
+2.3 Calculated phenotypic value
+        phenotype=The number of reads supporting the reference genome divided by the total number of reads
+3. run gemma
+     gemma -bfile gwasall -n 1 -gk 2 -miss 0.2 -maf 0.05 -hwe 1e-5 -o kin
+     gemma -bfile gwasall -n 1 -miss 0.2 -maf 0.05 -hwe 1e-5 -k ./output/kin.sXX.txt -lmm 4 -o gwasall
+4. draw plots
+     Rscript ../../manhattan.R gwasall.assoc.txt p_wald
+     pdftoppm -png gwasall.assoc.txtp_score_manhattan.pdf manhattan
