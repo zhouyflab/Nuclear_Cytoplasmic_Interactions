@@ -1,0 +1,16 @@
+1. blastn -query "$ID".fa -db "$ID"_hap1.fa -evalue 1e-5 -out "$ID"_hap1.txt -outfmt 6
+2. The blast results were filtered identity > 80% and alignment length > 100  bp
+3. Remove the overlap areas
+    python rm_overlap.py
+4. Extract the sequence after removing overlap area
+    seqkit subseq --bed "$ID"_numtcp.bed -o "$ID"_numtcp.fa "$ID"_hap1.fa
+5. The fa file obtained in the fourth step has chloroplast sequence, so it needs to be compared with the chloroplast genome to remove the chloroplast sequence
+    blastn -query "$ID"_numtcp.fa -db "$ID".fasta -evalue 1e-5 -out "$ID"_cp.txt -outfmt 6
+6. The initial NUMT sequence was obtained by removing the corresponding chloroplast sequence
+7. Calculate the depth of the NUMT sequence
+   7.1 minimap2 -ax map-hifi "$ID"_numt.fa "$ID".fastq > "$ID"_numt.sam
+        samtools view -bS "$ID"_numt.sam > "$ID"_numt.bam
+        samtools sort "$ID"_numt.bam -o "$ID"_numt.sort.bam
+        samtools index "$ID"_numt.sort.bam
+    7.2 samtools depth "$ID"_numt.sort.bam > "$ID"_numt.depth
+8. The NUMT fragments were finally determined based on nuclear and mitochondrial depth
